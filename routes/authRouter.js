@@ -13,6 +13,19 @@ Router.post('/register', (req, res) => {
     user.password = hash;
 
     /* write function to add user to database */
+     userModel.addUser(user)
+         .then(users => {
+             res.status(201).json({
+                 users,
+                 message: `Successfully created user: ${user.username} the ${user.role}`
+             })
+         })
+         .catch(err => {
+             res.status(400).json({
+                 err,
+                 message: err.errno === 19 ? 'User does not exists' : "Server error"
+             });
+         })
 
 
 });
@@ -22,7 +35,19 @@ Router.post('/login', (req, res) => {
 
     /* write function to add user to login*/
 
-
+    userModel.addUser(user)
+        .then(users => {
+            res.status(201).json({
+                users,
+                message: `Successfully created user: ${user.username} the ${user.role}`
+            })
+        })
+        .catch(err => {
+            res.status(400).json({
+                err,
+                message: err.errno === 19 ? 'User exists' : "Server error"
+            });
+        })
 })
 
 module.exports = Router;
