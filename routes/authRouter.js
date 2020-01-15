@@ -1,7 +1,7 @@
 const Router = require('express').Router();
 const bycrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const secrets = require('../config/sercrets.js');
+const secrets = require('../config/secrets.js');
 
 //data model for users
 const userModel = require('../database/models/userModel.js');
@@ -37,11 +37,6 @@ Router.post('/login', (req, res) => {
     } = req.body;
 
     /* write function to add user to login*/
-
-    let {
-        username,
-        password
-    } = req.body;
 
     userModel.findByUser(username).then(item => {
             if (item && bycrypt.compareSync(password, item[0].password)) {
