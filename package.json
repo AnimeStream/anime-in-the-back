@@ -1,11 +1,11 @@
 {
-  "name": "sqlite-backend",
+  "name": "anime-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "backend",
   "main": "index.js",
   "scripts": {
-    "server": "nodemon",
-    "start": "node index.js"
+    "start": "node -r esm server.js",
+    "dev": "nodemon -r esm server.js"
   },
   "keywords": [],
   "author": "",
@@ -15,13 +15,16 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "email-validator": "^2.0.4",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "helmet": "^3.21.2",
-    "jsonwebtoken": "^8.5.1",
     "jest": "^24.9.0",
+    "jsonwebtoken": "^8.5.1",
     "knex": "^0.20.7",
-    "nodemon": "^2.0.2",
+    "morgan": "^1.9.1",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
     "sqlite3": "^4.1.1"
   },
   "repository": {
@@ -31,5 +34,8 @@
   "bugs": {
     "url": "https://github.com/AnimeStream/anime-in-the-back/issues"
   },
-  "homepage": "https://github.com/AnimeStream/anime-in-the-back#readme"
+  "homepage": "https://github.com/AnimeStream/anime-in-the-back#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
 }

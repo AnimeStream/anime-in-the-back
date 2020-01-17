@@ -1,7 +1,8 @@
 const Router = require('express').Router();
 const bycrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const secrets = require('../config/secrets.js');
+// import secrets here 
+// import secrets from './../utils/secrets';
 
 //data model for users
 const userModel = require('../database/models/userModel.js');
