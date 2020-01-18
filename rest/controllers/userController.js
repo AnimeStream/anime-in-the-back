@@ -1,79 +1,128 @@
-const Router = require('express').Router();
-const bycrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-// import secrets here 
-// import secrets from './../utils/secrets';
+import db from '../../database/dbConfig';
+import bcjs from 'bcryptjs';
+import emailValidator from 'email-validator';
+import { generateToken } from '../../utils';
+require("dotenv").config();
 
-//data model for users
-const userModel = require('../database/models/userModel.js');
+const ENVIRONMENT = process.env.ENVIRONMENT;
 
-
-Router.post('/register', (req, res) => {
-    let user = req.body;
-    const hash = bycrypt.hashSync(user.password, 10);
-    user.password = hash;
-
-    /* write function to add user to database */
-    userModel.addUser(user)
-        .then(users => {
-            res.status(201).json({
-                users,
-                message: `Successfully created user: ${user.username} the ${user.role}`
-            })
-        })
-        .catch(err => {
-            res.status(400).json({
-                err,
-                message: err.errno === 19 ? 'User does not exists' : "Server error"
-            });
-        })
-
-
-});
-
-Router.post('/login', (req, res) => {
-    let {
-        username,
-        password
-    } = req.body;
-
-    /* write function to add user to login*/
-
-    userModel.findByUser(username).then(item => {
-            if (item && bycrypt.compareSync(password, item[0].password)) {
-                const token = genToken(item[0]);
-                res.status(200).json({
-                    username: item[0].username,
-                    token: token
-                });
-            } else {
-                res.status(401).json({
-                    message: "Invalid credentials"
-                })
-            }
-        })
-        .catch(err => {
-            res.status(500).json({
-                err,
-                message: "Server issue"
-            });
+const getUserById = async (req, res) => {
+  try{
+    const existingUser = await db('user').where({ id: req.params.id });
+    const userDetails = existingUser.length > 0 ? {
+      id: existingUser[0].id,
+      email: existingUser[0].email,
+      first_name: existingUser[0].first_name,
+      last_name: existingUser[0].last_name
+    }: null;
+    return res.status(200).json(userDetails);
+  } catch(err){
+    if (ENVIRONMENT === 'development') {
+      console.log(err);
+      return res.json(err);
+    } else {
+      console.log('Something went wrong!');
+      return res
+        .status(500)
+        .json({
+          error: true,
+          message: 'Error finding the user!',
         });
-})
+    }
+  }
+};
 
+const register = async (req, res) => {
+  try{
+    const { username, password} = req.body;
+    if (!username || !password) {
+      return res.status(400).json({error: true, message: 'username and password is required!'});
+    }
 
-function genToken(user) {
-    // create the payload...
-    const payload = {
-        uid: user.uid,
-        username: user.username,
-    };
+    const hash = await bcjs.hash(password, 10);
 
-    const options = {
-        expiresIn: "3h"
-    };
+    // reaching here means we have valid data
+    const validatedEntries = {...req.body, password: hash };
 
-    const token = jwt.sign(payload, secrets.jwtSecret, options);
-    return token;
-}
+    const newUser = await db('user').insert(validatedEntries);
 
-module.exports = Router;
+    if(newUser.length > 0){
+      const id = newUser[0];
+      const newlyCreatedUser = await db('user').where({ id });
+      const userDetails = newlyCreatedUser[0];
+      const token = await generateToken(userDetails);
+      return res.status(201).json({
+        id: userDetails.id,
+        username: userDetails.username,
+        token,
+      });
+    } else{
+      return res
+        .status(400)
+        .json({ error: true, message: 'Unable to create a new user' });
+    }
+  }catch(err){
+    if(ENVIRONMENT === 'development'){
+      console.log(err);
+      return res.json(err);
+    }else{
+      console.log("Something went wrong!");
+      return res
+        .status(500)
+        .json({ error: true, message: 'Error adding a new user to the database' });
+    }
+  }
+};
+
+const login = async (req, res) => {
+  try{
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({
+          error: true,
+          message: 'email and password is required!',
+        });
+    }
+
+    const user = await db('user').where({ email });
+
+    const userAndPasswordValid = user.length > 0 ? await bcjs.compare(password, user[0].password) : false;
+
+    if (userAndPasswordValid) {
+      const token = await generateToken(user[0]);
+      return res
+        .status(200)
+        .json({
+          first_name: user[0].first_name,
+          last_name: user[0].last_name,
+          message: `Welcome ${user[0].first_name}! Here's a token: `,
+          token: token,
+        });
+    } else {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+  }catch(err){
+    if (ENVIRONMENT === 'development') {
+      console.log(err);
+      return res.json(err);
+    } else {
+      console.log('Something went wrong!');
+      return res
+        .status(500)
+        .json({
+          error: true,
+          message: 'Error logging in',
+        });
+    }
+  }
+};
+
+export default {
+  generateToken,
+  getUserById,
+  login,
+  register,
+};

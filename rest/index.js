@@ -1,4 +1,8 @@
-import userController from './controllers/userController';
+import {
+  getUserById,
+  login,
+  register
+} from './controllers';
 
 export default app => {
   // public
@@ -7,5 +11,8 @@ export default app => {
   });
 
   app.route('/api/login').post(login);
-  app.route('/api/register').post(userController);
+  app.route('/api/register').post(register);
+
+  // protected routes
+  app.route('/api/auth/users/:id').get(getUserById);
 }
