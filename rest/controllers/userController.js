@@ -8,7 +8,7 @@ const ENVIRONMENT = process.env.ENVIRONMENT;
 
 const getUserById = async (req, res) => {
   try{
-    const existingUser = await db('user').where({ id: req.params.id });
+    const existingUser = await db('users').where({ id: req.params.id });
     const userDetails = existingUser.length > 0 ? {
       id: existingUser[0].id,
       email: existingUser[0].email,
@@ -34,9 +34,22 @@ const getUserById = async (req, res) => {
 
 const register = async (req, res) => {
   try{
-    const { username, password} = req.body;
-    if (!username || !password) {
-      return res.status(400).json({error: true, message: 'username and password is required!'});
+    const { email, password, first_name, last_name } = req.body;
+
+    if (!email || !password || !first_name || !last_name) {
+      return res.status(400).json({error: true, message: 'firstname, lastname, email and password is required!'});
+    }
+
+    if (!emailValidator.validate(email)){
+      return res.status(400).json({error: true, message: 'provide a valid email'});
+    }
+
+    const existingUser = await db('users').where({ email });
+
+    if(existingUser.length > 0) {
+      return res
+        .status(400)
+        .json({ error: true, message: 'Email address is already registered' });
     }
 
     const hash = await bcjs.hash(password, 10);
@@ -44,16 +57,18 @@ const register = async (req, res) => {
     // reaching here means we have valid data
     const validatedEntries = {...req.body, password: hash };
 
-    const newUser = await db('user').insert(validatedEntries);
+    const newUser = await db('users').insert(validatedEntries);
 
     if(newUser.length > 0){
       const id = newUser[0];
-      const newlyCreatedUser = await db('user').where({ id });
+      const newlyCreatedUser = await db('users').where({ id });
       const userDetails = newlyCreatedUser[0];
       const token = await generateToken(userDetails);
       return res.status(201).json({
         id: userDetails.id,
-        username: userDetails.username,
+        email: userDetails.email,
+        first_name: userDetails.first_name,
+        last_name: userDetails.last_name,
         token,
       });
     } else{
@@ -87,8 +102,7 @@ const login = async (req, res) => {
         });
     }
 
-    const user = await db('user').where({ email });
-
+    const user = await db('users').where({ email });
     const userAndPasswordValid = user.length > 0 ? await bcjs.compare(password, user[0].password) : false;
 
     if (userAndPasswordValid) {

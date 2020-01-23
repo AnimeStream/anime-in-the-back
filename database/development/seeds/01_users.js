@@ -10,7 +10,9 @@ exports.seed = function(knex) {
       ;
       return knex('users').insert([
         {
-          username: 'kimbo',
+          first_name: "testy",
+          last_name: "million",
+          email: "test@gmail.com",
           password: bcrypt.hashSync("test", salt)
         },
       ]);

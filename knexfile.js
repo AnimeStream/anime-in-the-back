@@ -1,18 +1,12 @@
-// Update with your config settings.
+const path = require("path");
 
 module.exports = {
-
     development: {
         client: "sqlite3",
         connection: {
-            filename: "./database/development/projectDb.db3"
+            filename: path.resolve(__dirname, 'database/development/projectDb.db3')
         },
         useNullAsDefault: true,
-        pool: {
-            afterCreate: (conn, done) => {
-                conn.run("PRAGMA foreign_keys = ON", done);
-            }
-        },
         migrations: {
             directory: "./database/development/migrations"
         },

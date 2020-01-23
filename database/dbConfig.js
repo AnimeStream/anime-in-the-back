@@ -1,7 +1,5 @@
-const knex = require('knex');
+import knex from 'knex';
 
-const config = require('../knexfile.js');
+import knexConfig from '../knexfile';
 
-const dbEnv = process.env.DB_ENV || 'development';
-
-module.exports = knex(config[dbEnv]);
+export default knex(knexConfig.development);

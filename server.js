@@ -1,7 +1,7 @@
 import app from './app';
 require("dotenv").config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5002;
 app.listen(PORT, err => {
   if (err) {
     return console.log(`\u274c  Error encountered ${err}\n`);
